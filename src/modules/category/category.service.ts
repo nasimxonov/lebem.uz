@@ -1,4 +1,8 @@
-import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from 'src/core/database/prisma.service';
 
 @Injectable()
@@ -39,7 +43,9 @@ export class CategoryService {
 
   async update(id: string, data: { title?: string }) {
     try {
-      const existing = await this.prisma.categories.findUnique({ where: { id } });
+      const existing = await this.prisma.categories.findUnique({
+        where: { id },
+      });
       if (!existing) throw new NotFoundException('category not found');
 
       return await this.prisma.categories.update({
@@ -53,7 +59,9 @@ export class CategoryService {
 
   async remove(id: string) {
     try {
-      const existing = await this.prisma.categories.findUnique({ where: { id } });
+      const existing = await this.prisma.categories.findUnique({
+        where: { id },
+      });
       if (!existing) throw new NotFoundException('category not found');
 
       return await this.prisma.categories.delete({ where: { id } });
