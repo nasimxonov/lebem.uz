@@ -1,4 +1,8 @@
-import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from 'src/core/database/prisma.service';
 
 @Injectable()
@@ -49,7 +53,12 @@ export class ProductsService {
 
   async update(
     id: string,
-    data: { title?: string; price?: number; description?: string; categoryId?: string },
+    data: {
+      title?: string;
+      price?: number;
+      description?: string;
+      categoryId?: string;
+    },
   ) {
     try {
       const existing = await this.prisma.products.findUnique({ where: { id } });
