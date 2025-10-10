@@ -31,6 +31,15 @@ model Products {
   @@map("products")
 }
 
+model Contact {
+  id        String   @id @default(uuid())
+  fullname  String
+  phone     String
+  createdAt DateTime @default(now())
+
+  @@map("contacts")
+}
+
 model Product_images {
   id        String   @id @default(uuid())
   imageUrl  String

@@ -8,13 +8,22 @@ import {
   Delete,
 } from '@nestjs/common';
 import { CategoryService } from './category.service';
+import { ApiTags, ApiBody, ApiParam } from '@nestjs/swagger';
 
+@ApiTags('Categories')
 @Controller('categories')
 export class CategoryController {
   constructor(private readonly categoryService: CategoryService) {}
 
   @Post()
-  create(@Body() body: { title: string }) {
+  @ApiBody({
+    schema: {
+      properties: {
+        title: { type: 'string' },
+      },
+    },
+  })
+  create(@Body() body: any) {
     return this.categoryService.create(body);
   }
 
@@ -24,16 +33,26 @@ export class CategoryController {
   }
 
   @Get(':id')
+  @ApiParam({ name: 'id', type: 'string' })
   findOne(@Param('id') id: string) {
     return this.categoryService.findOne(id);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() body: { title?: string }) {
+  @ApiParam({ name: 'id', type: 'string' })
+  @ApiBody({
+    schema: {
+      properties: {
+        title: { type: 'string' },
+      },
+    },
+  })
+  update(@Param('id') id: string, @Body() body: any) {
     return this.categoryService.update(id, body);
   }
 
   @Delete(':id')
+  @ApiParam({ name: 'id', type: 'string' })
   remove(@Param('id') id: string) {
     return this.categoryService.remove(id);
   }

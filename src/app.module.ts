@@ -4,6 +4,7 @@ import { CategoryModule } from './modules/category/category.module';
 import { ProductsModule } from './modules/products/products.module';
 import { UsersModule } from './modules/users/users.module';
 import { CoreModule } from './core/core.module';
+import { ContactModule } from './modules/cantact/contact.module';
 
 @Module({
   imports: [
@@ -12,6 +13,7 @@ import { CoreModule } from './core/core.module';
     AuthModule,
     ProductsModule,
     CategoryModule,
+    ContactModule,
   ],
   controllers: [],
   providers: [],

@@ -1,7 +1,7 @@
 import {
   Injectable,
-  BadRequestException,
   NotFoundException,
+  BadRequestException,
 } from '@nestjs/common';
 import { PrismaService } from 'src/core/database/prisma.service';
 
@@ -19,11 +19,11 @@ export class ProductsService {
       const category = await this.prisma.categories.findUnique({
         where: { id: data.categoryId },
       });
-      if (!category) throw new NotFoundException('Kategoriya topilmadi');
+      if (!category) throw new NotFoundException('category not found');
 
       return await this.prisma.products.create({ data });
     } catch (error) {
-      throw new BadRequestException('Mahsulot yaratishda xatolik');
+      throw new BadRequestException(error);
     }
   }
 
@@ -33,7 +33,7 @@ export class ProductsService {
         include: { category: true, images: true },
       });
     } catch (error) {
-      throw new BadRequestException('Mahsulotlarni olishda xatolik');
+      throw new BadRequestException(error);
     }
   }
 
@@ -44,10 +44,10 @@ export class ProductsService {
         include: { category: true, images: true },
       });
 
-      if (!product) throw new NotFoundException('Mahsulot topilmadi');
+      if (!product) throw new NotFoundException('Product not found');
       return product;
     } catch (error) {
-      throw new BadRequestException('Mahsulot olishda xatolik');
+      throw new BadRequestException(error);
     }
   }
 
@@ -62,25 +62,25 @@ export class ProductsService {
   ) {
     try {
       const existing = await this.prisma.products.findUnique({ where: { id } });
-      if (!existing) throw new NotFoundException('Mahsulot topilmadi');
+      if (!existing) throw new NotFoundException('product not found');
 
       return await this.prisma.products.update({
         where: { id },
         data,
       });
     } catch (error) {
-      throw new BadRequestException('Mahsulot yangilashda xatolik');
+      throw new BadRequestException(error);
     }
   }
 
   async remove(id: string) {
     try {
       const existing = await this.prisma.products.findUnique({ where: { id } });
-      if (!existing) throw new NotFoundException('Mahsulot topilmadi');
+      if (!existing) throw new NotFoundException('Product not found');
 
       return await this.prisma.products.delete({ where: { id } });
     } catch (error) {
-      throw new BadRequestException('Mahsulot o‘chirishda xatolik');
+      throw new BadRequestException(error);
     }
   }
 }
