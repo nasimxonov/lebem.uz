@@ -30,10 +30,4 @@ export class ContactController {
   create(@Body() body: { fullname: string; phone: string }) {
     return this.contactService.create(body);
   }
-
-  @Get()
-  @ApiResponse({ status: 200, description: 'Barcha kontaktlar royxati' })
-  findAll() {
-    return this.contactService.findAll();
-  }
 }

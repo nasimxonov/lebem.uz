@@ -12,10 +12,4 @@ export class ContactService {
       data: contact,
     };
   }
-
-  async findAll() {
-    return this.prisma.contact.findMany({
-      orderBy: { createdAt: 'desc' },
-    });
-  }
 }
