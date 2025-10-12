@@ -15,7 +15,6 @@ import { FilesInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
 import { v4 as uuid } from 'uuid';
-import { log } from 'console';
 
 @ApiTags('Products')
 @Controller('products')
@@ -27,7 +26,7 @@ export class ProductsController {
   @UseInterceptors(
     FilesInterceptor('images', 10, {
       storage: diskStorage({
-        destination: './uploads',
+        destination: './uploads/products',
         filename: (req, file, callback) => {
           const uniqueName = uuid() + extname(file.originalname);
           callback(null, uniqueName);
@@ -88,7 +87,7 @@ export class ProductsController {
   @UseInterceptors(
     FilesInterceptor('images', 10, {
       storage: diskStorage({
-        destination: './uploads',
+        destination: './uploads/products',
         filename: (req, file, callback) => {
           const uniqueName = uuid() + extname(file.originalname);
           callback(null, uniqueName);
@@ -120,7 +119,7 @@ export class ProductsController {
     @Body() body: any,
   ) {
     const imageUrls = files
-      ? files.map((file) => `/uploads/${file.filename}`)
+      ? files.map((file) => `/uploads/products/${file.filename}`)
       : [];
     return this.productsService.update(id, {
       title: body.title,
@@ -135,5 +134,11 @@ export class ProductsController {
   @ApiParam({ name: 'id', type: 'string' })
   remove(@Param('id') id: string) {
     return this.productsService.remove(id);
+  }
+
+  @Delete('image/:id')
+  @ApiParam({ name: 'id', type: 'string' })
+  removeImage(@Param('id') id: string) {
+    return this.productsService.removeImage(id);
   }
 }

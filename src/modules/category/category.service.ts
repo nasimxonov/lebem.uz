@@ -2,8 +2,11 @@ import {
   Injectable,
   BadRequestException,
   NotFoundException,
+  InternalServerErrorException,
 } from '@nestjs/common';
 import { PrismaService } from 'src/core/database/prisma.service';
+import * as fs from 'fs';
+import * as path from 'path';
 
 @Injectable()
 export class CategoryService {
@@ -76,6 +79,44 @@ export class CategoryService {
       return await this.prisma.categories.delete({ where: { id } });
     } catch (error) {
       throw new BadRequestException(error);
+    }
+  }
+
+  async removeImage(id: string) {
+    try {
+      const existing = await this.prisma.categories.findUnique({
+        where: { id },
+      });
+
+      if (!existing) throw new NotFoundException('Kategoriya topilmadi');
+
+      if (existing.image) {
+        const fileName = path.basename(existing.image);
+        const imagePath = path.join(
+          process.cwd(),
+          'uploads',
+          'categories',
+          fileName,
+        );
+
+        try {
+          if (fs.existsSync(imagePath)) {
+            fs.unlinkSync(imagePath);
+          } else {
+            throw new NotFoundException('Kategoriya rasmi tizimda topilmadi');
+          }
+        } catch (err) {
+          throw new InternalServerErrorException(
+            "Kategoriya rasmini o'chirishda xatolik yuz berdi",
+          );
+        }
+      }
+
+      return await this.prisma.categories.delete({ where: { id } });
+    } catch (error) {
+      throw new BadRequestException(
+        error.message || "Kategoriya o'chirishda xatolik yuz berdi",
+      );
     }
   }
 }

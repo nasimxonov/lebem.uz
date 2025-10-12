@@ -44,7 +44,7 @@ model Product_images {
   id        String   @id @default(uuid())
   imageUrl  String
   productId String
-  product   Products @relation(fields: [productId], references: [id])
+  product   Products @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   @@map("product_images")
 }

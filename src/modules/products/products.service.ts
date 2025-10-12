@@ -2,8 +2,11 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
+  InternalServerErrorException,
 } from '@nestjs/common';
 import { PrismaService } from 'src/core/database/prisma.service';
+import * as fs from 'fs';
+import * as path from 'path';
 
 @Injectable()
 export class ProductsService {
@@ -20,12 +23,11 @@ export class ProductsService {
       const category = await this.prisma.categories.findUnique({
         where: { id: data.categoryId },
       });
-      
+
       if (!category) throw new NotFoundException('Category not found');
-      
-      console.log("salom");
+
+      console.log('salom');
       console.log(data.imageUrls);
-      
 
       return await this.prisma.products.create({
         data: {
@@ -41,7 +43,7 @@ export class ProductsService {
       });
     } catch (error) {
       console.log(error.message);
-      
+
       throw new BadRequestException(error);
     }
   }
@@ -103,5 +105,37 @@ export class ProductsService {
     if (!existing) throw new NotFoundException('Product not found');
 
     return this.prisma.products.delete({ where: { id } });
+  }
+
+  async removeImage(id: string) {
+    const image = await this.prisma.product_images.findUnique({
+      where: { id },
+    });
+    if (!image) throw new NotFoundException('Rasm topilmadi');
+
+    const fileName = path.basename(image.imageUrl);
+    const imagePath = path.join(process.cwd(), 'uploads', 'products', fileName);
+
+    try {
+      if (fs.existsSync(imagePath)) {
+        fs.unlinkSync(imagePath);
+      } else {
+        throw new NotFoundException('Fayl tizimda topilmadi');
+      }
+    } catch (err) {
+      throw new InternalServerErrorException(
+        "Faylni o'chirishda xatolik yuz berdi",
+      );
+    }
+
+    try {
+      await this.prisma.product_images.delete({ where: { id } });
+    } catch (err) {
+      throw new InternalServerErrorException(
+        'Bazadan ochirishda xatolik yuz berdi',
+      );
+    }
+
+    return { message: "Rasm muvaffaqiyatli o'chirildi" };
   }
 }
