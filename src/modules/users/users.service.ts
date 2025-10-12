@@ -7,18 +7,8 @@ export class UsersService {
 
   async getMe(user: any) {
     try {
-      if (user.role === 'admin') {
-        return { username: user.username };
-      }
-
-      const me = await this.prisma.users.findUnique({
-        where: { id: user.id },
-        select: { id: true, first_name: true, last_name: true, username: true },
-      });
-
-      return me;
+      return { status: 'ok' };
     } catch (error) {
-      console.error('GetMe error:', error);
       throw new InternalServerErrorException(error);
     }
   }

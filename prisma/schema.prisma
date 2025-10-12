@@ -52,6 +52,7 @@ model Product_images {
 model Categories {
   id       String     @id @default(uuid())
   title    String
+  image    String?
   products Products[]
 
   @@map("categories")

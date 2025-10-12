@@ -9,9 +9,14 @@ import { PrismaService } from 'src/core/database/prisma.service';
 export class CategoryService {
   constructor(private prisma: PrismaService) {}
 
-  async create(data: { title: string }) {
+  async create(data: { title: string; image?: string }) {
     try {
-      return await this.prisma.categories.create({ data });
+      return await this.prisma.categories.create({
+        data: {
+          title: data.title,
+          image: data.image ?? undefined,
+        },
+      });
     } catch (error) {
       throw new BadRequestException(error);
     }
@@ -41,16 +46,20 @@ export class CategoryService {
     }
   }
 
-  async update(id: string, data: { title?: string }) {
+  async update(id: string, data: { title?: string; image?: string }) {
     try {
       const existing = await this.prisma.categories.findUnique({
         where: { id },
       });
+
       if (!existing) throw new NotFoundException('category not found');
 
       return await this.prisma.categories.update({
         where: { id },
-        data,
+        data: {
+          title: data.title ?? existing.title,
+          image: data.image ?? existing.image,
+        },
       });
     } catch (error) {
       throw new BadRequestException(error);
