@@ -108,34 +108,39 @@ export class ProductsService {
   }
 
   async removeImage(id: string) {
-    const image = await this.prisma.product_images.findUnique({
-      where: { id },
-    });
-    if (!image) throw new NotFoundException('Rasm topilmadi');
-
-    const fileName = path.basename(image.imageUrl);
-    const imagePath = path.join(process.cwd(), 'uploads', 'products', fileName);
-
     try {
+      const image = await this.prisma.product_images.findUnique({
+        where: { id },
+      });
+
+      if (!image) throw new NotFoundException('Rasm topilmadi');
+
+      const fileName = path.basename(image.imageUrl);
+      const imagePath = path.join(
+        process.cwd(),
+        'uploads',
+        'products',
+        fileName,
+      );
+
       if (fs.existsSync(imagePath)) {
-        fs.unlinkSync(imagePath);
-      } else {
-        throw new NotFoundException('Fayl tizimda topilmadi');
+        try {
+          fs.unlinkSync(imagePath);
+        } catch (err) {
+          throw new InternalServerErrorException(
+            "Faylni o'chirishda xatolik yuz berdi",
+          );
+        }
       }
-    } catch (err) {
-      throw new InternalServerErrorException(
-        "Faylni o'chirishda xatolik yuz berdi",
-      );
-    }
 
-    try {
       await this.prisma.product_images.delete({ where: { id } });
-    } catch (err) {
-      throw new InternalServerErrorException(
-        'Bazadan ochirishda xatolik yuz berdi',
-      );
-    }
 
-    return { message: "Rasm muvaffaqiyatli o'chirildi" };
+      return { message: "Rasm muvaffaqiyatli o'chirildi" };
+    } catch (error) {
+      throw new BadRequestException({
+        message: "Rasmni o'chirishda xatolik yuz berdi",
+        error: error.message,
+      });
+    }
   }
 }
