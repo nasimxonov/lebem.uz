@@ -2,7 +2,6 @@ import {
   Injectable,
   BadRequestException,
   NotFoundException,
-  InternalServerErrorException,
 } from '@nestjs/common';
 import { PrismaService } from 'src/core/database/prisma.service';
 import * as fs from 'fs';
@@ -21,7 +20,12 @@ export class CategoryService {
         },
       });
     } catch (error) {
-      throw new BadRequestException(error);
+      throw new BadRequestException({
+        message: 'Kategoriya yaratishda xatolik',
+        error: error.message,
+        code: error.code,
+        meta: error.meta,
+      });
     }
   }
 
@@ -31,7 +35,10 @@ export class CategoryService {
         include: { products: true },
       });
     } catch (error) {
-      throw new BadRequestException(error);
+      throw new BadRequestException({
+        message: 'Kategoriyalarni olishda xatolik',
+        error: error.message,
+      });
     }
   }
 
@@ -42,10 +49,15 @@ export class CategoryService {
         include: { products: true },
       });
 
-      if (!category) throw new NotFoundException('Category not found');
+      if (!category)
+        throw new NotFoundException({ message: 'Kategoriya topilmadi' });
+
       return category;
     } catch (error) {
-      throw new BadRequestException(error);
+      throw new BadRequestException({
+        message: 'Kategoriya maʼlumotini olishda xatolik',
+        error: error.message,
+      });
     }
   }
 
@@ -55,9 +67,10 @@ export class CategoryService {
         where: { id },
       });
 
-      if (!existing) throw new NotFoundException('Category not found');
+      if (!existing)
+        throw new NotFoundException({ message: 'Kategoriya topilmadi' });
 
-      const updatedData: any = {
+      const updatedData = {
         title: data.title ?? existing.title,
         image: data.image ?? existing.image,
       };
@@ -67,7 +80,12 @@ export class CategoryService {
         data: updatedData,
       });
     } catch (error) {
-      throw new BadRequestException(error);
+      throw new BadRequestException({
+        message: 'Kategoriya yangilashda xatolik',
+        error: error.message,
+        code: error.code,
+        meta: error.meta,
+      });
     }
   }
 
@@ -76,11 +94,17 @@ export class CategoryService {
       const existing = await this.prisma.categories.findUnique({
         where: { id },
       });
-      if (!existing) throw new NotFoundException('Category not found');
+      if (!existing)
+        throw new NotFoundException({ message: 'Kategoriya topilmadi' });
 
       return await this.prisma.categories.delete({ where: { id } });
     } catch (error) {
-      throw new BadRequestException(error);
+      throw new BadRequestException({
+        message: 'Kategoriya o‘chirishda xatolik',
+        error: error.message,
+        code: error.code,
+        meta: error.meta,
+      });
     }
   }
 
@@ -90,7 +114,8 @@ export class CategoryService {
         where: { id },
       });
 
-      if (!existing) throw new NotFoundException('Kategoriya topilmadi');
+      if (!existing)
+        throw new NotFoundException({ message: 'Kategoriya topilmadi' });
 
       if (existing.image) {
         const fileName = path.basename(existing.image);
@@ -101,16 +126,8 @@ export class CategoryService {
           fileName,
         );
 
-        try {
-          if (fs.existsSync(imagePath)) {
-            fs.unlinkSync(imagePath);
-          } else {
-            throw new NotFoundException('Kategoriya rasmi tizimda topilmadi');
-          }
-        } catch (err) {
-          throw new InternalServerErrorException(
-            "Kategoriya rasmini o'chirishda xatolik yuz berdi",
-          );
+        if (fs.existsSync(imagePath)) {
+          fs.unlinkSync(imagePath);
         }
       }
 
@@ -121,9 +138,11 @@ export class CategoryService {
 
       return { message: "Kategoriya rasmi o'chirildi" };
     } catch (error) {
-      throw new BadRequestException(
-        error.message || "Kategoriya o'chirishda xatolik yuz berdi",
-      );
+      throw new BadRequestException({
+        message: 'Kategoriya rasmini o‘chirishda xatolik',
+        error: error.message,
+        code: error.code,
+      });
     }
   }
 }
