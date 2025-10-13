@@ -5,10 +5,10 @@ import { join } from 'path';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { existsSync, mkdirSync } from 'fs';
 
-
-
 async function bootstrap() {
-  const app = await NestFactory.create<NestExpressApplication>(AppModule, { cors: true });
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
+    cors: true,
+  });
 
   app.setGlobalPrefix('api');
 
@@ -18,13 +18,12 @@ async function bootstrap() {
     credentials: true,
   });
 
-  const uploadDir = join(__dirname, '..', 'uploads');
-
+  const uploadDir = join(__dirname, '..', 'uploads', 'categories');
   if (!existsSync(uploadDir)) {
-    mkdirSync(uploadDir);
+    mkdirSync(uploadDir, { recursive: true });
   }
 
-  app.useStaticAssets(uploadDir, {
+  app.useStaticAssets(join(__dirname, '..', 'uploads'), {
     prefix: '/uploads/',
   });
 
@@ -39,9 +38,7 @@ async function bootstrap() {
     .addTag('Auth')
     .build();
 
-    
   const document = SwaggerModule.createDocument(app, config);
-
   SwaggerModule.setup('docs', app, document);
 
   await app.listen(process.env.PORT ?? 3000, '0.0.0.0');
