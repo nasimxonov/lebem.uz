@@ -14,6 +14,7 @@ import { ApiTags, ApiBody, ApiParam, ApiConsumes } from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
+import { v4 as uuid } from 'uuid';
 
 @ApiTags('Categories')
 @Controller('categories')
@@ -27,9 +28,8 @@ export class CategoryController {
       storage: diskStorage({
         destination: './uploads/categories',
         filename: (req, file, callback) => {
-          const uniqueSuffix =
-            Date.now() + '-' + Math.round(Math.random() * 1e9);
-          callback(null, uniqueSuffix + extname(file.originalname));
+          const uniqueName = uuid() + extname(file.originalname);
+          callback(null, uniqueName);
         },
       }),
     }),
@@ -44,13 +44,14 @@ export class CategoryController {
     },
   })
   create(@Body() body: any, @UploadedFile() image: Express.Multer.File) {
-    console.log(body);
-    const data = {
-      title: body.title,
-      image: image ? `/uploads/categories/${image.filename}` : undefined,
-    };
+    const imageUrl = image
+      ? `/uploads/categories/${image.filename}`
+      : undefined;
 
-    return this.categoryService.create(data);
+    return this.categoryService.create({
+      title: body.title,
+      image: imageUrl,
+    });
   }
 
   @Get()
@@ -65,20 +66,19 @@ export class CategoryController {
   }
 
   @Patch(':id')
+  @ApiParam({ name: 'id', type: 'string' })
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(
     FileInterceptor('image', {
       storage: diskStorage({
         destination: './uploads/categories',
         filename: (req, file, callback) => {
-          const uniqueSuffix =
-            Date.now() + '-' + Math.round(Math.random() * 1e9);
-          callback(null, uniqueSuffix + extname(file.originalname));
+          const uniqueName = uuid() + extname(file.originalname);
+          callback(null, uniqueName);
         },
       }),
     }),
   )
-  @ApiParam({ name: 'id', type: 'string' })
   @ApiBody({
     schema: {
       type: 'object',
@@ -93,14 +93,25 @@ export class CategoryController {
     @Body() body: any,
     @UploadedFile() image: Express.Multer.File,
   ) {
-    const data: any = { title: body.title };
-    if (image) data.image = image.filename;
-    return this.categoryService.update(id, data);
+    const imageUrl = image
+      ? `/uploads/categories/${image.filename}`
+      : undefined;
+
+    return this.categoryService.update(id, {
+      title: body.title,
+      image: imageUrl,
+    });
   }
 
   @Delete(':id')
   @ApiParam({ name: 'id', type: 'string' })
   remove(@Param('id') id: string) {
     return this.categoryService.remove(id);
+  }
+
+  @Delete('image/:id')
+  @ApiParam({ name: 'id', type: 'string' })
+  removeImage(@Param('id') id: string) {
+    return this.categoryService.removeImage(id);
   }
 }

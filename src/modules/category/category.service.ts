@@ -42,7 +42,7 @@ export class CategoryService {
         include: { products: true },
       });
 
-      if (!category) throw new NotFoundException('category not found');
+      if (!category) throw new NotFoundException('Category not found');
       return category;
     } catch (error) {
       throw new BadRequestException(error);
@@ -55,14 +55,16 @@ export class CategoryService {
         where: { id },
       });
 
-      if (!existing) throw new NotFoundException('category not found');
+      if (!existing) throw new NotFoundException('Category not found');
+
+      const updatedData: any = {
+        title: data.title ?? existing.title,
+        image: data.image ?? existing.image,
+      };
 
       return await this.prisma.categories.update({
         where: { id },
-        data: {
-          title: data.title ?? existing.title,
-          image: data.image ?? existing.image,
-        },
+        data: updatedData,
       });
     } catch (error) {
       throw new BadRequestException(error);
@@ -74,7 +76,7 @@ export class CategoryService {
       const existing = await this.prisma.categories.findUnique({
         where: { id },
       });
-      if (!existing) throw new NotFoundException('category not found');
+      if (!existing) throw new NotFoundException('Category not found');
 
       return await this.prisma.categories.delete({ where: { id } });
     } catch (error) {
@@ -112,7 +114,12 @@ export class CategoryService {
         }
       }
 
-      return await this.prisma.categories.delete({ where: { id } });
+      await this.prisma.categories.update({
+        where: { id },
+        data: { image: null },
+      });
+
+      return { message: "Kategoriya rasmi o'chirildi" };
     } catch (error) {
       throw new BadRequestException(
         error.message || "Kategoriya o'chirishda xatolik yuz berdi",
