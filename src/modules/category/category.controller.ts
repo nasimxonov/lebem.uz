@@ -8,6 +8,8 @@ import {
   Delete,
   UploadedFile,
   UseInterceptors,
+  Req,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { CategoryService } from './category.service';
 import { ApiTags, ApiBody, ApiParam, ApiConsumes } from '@nestjs/swagger';
@@ -43,11 +45,17 @@ export class CategoryController {
       },
     },
   })
-  create(@Body() body: any, @UploadedFile() image: Express.Multer.File) {
+  create(
+    @Body() body: any,
+    @UploadedFile() image: Express.Multer.File,
+    @Req() req: any,
+  ) {
+    if (!req.user)
+      throw new UnauthorizedException('Foydalanuvchi tizimga kirmagan');
+
     const imageUrl = image
       ? `/uploads/categories/${image.filename}`
       : undefined;
-
     return this.categoryService.create({
       title: body.title,
       image: imageUrl,
@@ -92,11 +100,14 @@ export class CategoryController {
     @Param('id') id: string,
     @Body() body: any,
     @UploadedFile() image: Express.Multer.File,
+    @Req() req: any,
   ) {
+    if (!req.user)
+      throw new UnauthorizedException('Foydalanuvchi tizimga kirmagan');
+
     const imageUrl = image
       ? `/uploads/categories/${image.filename}`
       : undefined;
-
     return this.categoryService.update(id, {
       title: body.title,
       image: imageUrl,
@@ -105,13 +116,19 @@ export class CategoryController {
 
   @Delete(':id')
   @ApiParam({ name: 'id', type: 'string' })
-  remove(@Param('id') id: string) {
+  remove(@Param('id') id: string, @Req() req: any) {
+    if (!req.user)
+      throw new UnauthorizedException('Foydalanuvchi tizimga kirmagan');
+
     return this.categoryService.remove(id);
   }
 
   @Delete('image/:id')
   @ApiParam({ name: 'id', type: 'string' })
-  removeImage(@Param('id') id: string) {
+  removeImage(@Param('id') id: string, @Req() req: any) {
+    if (!req.user)
+      throw new UnauthorizedException('Foydalanuvchi tizimga kirmagan');
+
     return this.categoryService.removeImage(id);
   }
 }

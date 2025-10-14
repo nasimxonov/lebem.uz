@@ -8,6 +8,8 @@ import {
   Delete,
   UploadedFiles,
   UseInterceptors,
+  Req,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { ProductsService } from './products.service';
 import { ApiTags, ApiBody, ApiParam, ApiConsumes } from '@nestjs/swagger';
@@ -32,9 +34,7 @@ export class ProductsController {
           callback(null, uniqueName);
         },
       }),
-      limits: {
-        fileSize: 100 * 1024 * 1024,
-      },
+      limits: { fileSize: 100 * 1024 * 1024 },
     }),
   )
   @ApiBody({
@@ -47,10 +47,7 @@ export class ProductsController {
         categoryId: { type: 'string' },
         images: {
           type: 'array',
-          items: {
-            type: 'string',
-            format: 'binary',
-          },
+          items: { type: 'string', format: 'binary' },
         },
       },
     },
@@ -58,9 +55,12 @@ export class ProductsController {
   async create(
     @UploadedFiles() files: Express.Multer.File[],
     @Body() body: any,
+    @Req() req: any,
   ) {
-    const imageUrls = files.map((file) => `/uploads/products/${file.filename}`);
+    if (!req.user)
+      throw new UnauthorizedException('Foydalanuvchi tizimga kirmagan');
 
+    const imageUrls = files.map((file) => `/uploads/products/${file.filename}`);
     return this.productsService.create({
       title: body.title,
       price: Number(body.price),
@@ -105,10 +105,7 @@ export class ProductsController {
         categoryId: { type: 'string' },
         images: {
           type: 'array',
-          items: {
-            type: 'string',
-            format: 'binary',
-          },
+          items: { type: 'string', format: 'binary' },
         },
       },
     },
@@ -117,7 +114,11 @@ export class ProductsController {
     @Param('id') id: string,
     @UploadedFiles() files: Express.Multer.File[],
     @Body() body: any,
+    @Req() req: any,
   ) {
+    if (!req.user)
+      throw new UnauthorizedException('Foydalanuvchi tizimga kirmagan');
+
     const imageUrls = files
       ? files.map((file) => `/uploads/products/${file.filename}`)
       : [];
@@ -132,13 +133,19 @@ export class ProductsController {
 
   @Delete(':id')
   @ApiParam({ name: 'id', type: 'string' })
-  remove(@Param('id') id: string) {
+  remove(@Param('id') id: string, @Req() req: any) {
+    if (!req.user)
+      throw new UnauthorizedException('Foydalanuvchi tizimga kirmagan');
+
     return this.productsService.remove(id);
   }
 
   @Delete('image/:id')
   @ApiParam({ name: 'id', type: 'string' })
-  removeImage(@Param('id') id: string) {
+  removeImage(@Param('id') id: string, @Req() req: any) {
+    if (!req.user)
+      throw new UnauthorizedException('Foydalanuvchi tizimga kirmagan');
+
     return this.productsService.removeImage(id);
   }
 }
