@@ -17,14 +17,6 @@ export class AuthService {
 
   async login(username: string, password: string) {
     try {
-      if (
-        username === process.env.ADMIN_USERNAME &&
-        password === process.env.ADMIN_PASSWORD
-      ) {
-        const token = await this.jwt.signAsync({ username, role: 'admin' });
-        return { message: 'Admin login successfully', token };
-      }
-
       const user = await this.prisma.users.findUnique({ where: { username } });
       if (!user) throw new NotFoundException('User not found');
 
