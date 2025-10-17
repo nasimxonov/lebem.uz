@@ -1,51 +1,35 @@
-import {
-  Injectable,
-  NotFoundException,
-  BadRequestException,
-  InternalServerErrorException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, InternalServerErrorException } from '@nestjs/common';
 import { PrismaService } from 'src/core/database/prisma.service';
 import * as fs from 'fs';
 import * as path from 'path';
+import { UpdateProductDto } from './dto/update-product.dto';
 
 @Injectable()
 export class ProductsService {
   constructor(private prisma: PrismaService) {}
 
-  async create(data: {
-    title: string;
-    price: number;
-    description: string;
-    categoryId: string;
-    imageUrls: string[];
-  }) {
-    try {
-      const category = await this.prisma.categories.findUnique({
-        where: { id: data.categoryId },
-      });
+  async create(data: { title: string; price: number; description: string; categoryId: string; imageUrls: string[] }) {
+    const category = await this.prisma.categories.findUnique({
+      where: { id: data.categoryId },
+    });
 
-      if (!category) throw new NotFoundException('Category not found');
+    if (!category) throw new NotFoundException('Category not found');
 
-      console.log('salom');
-      console.log(data.imageUrls);
+    console.log('salom');
+    console.log(data.imageUrls);
 
-      return await this.prisma.products.create({
-        data: {
-          title: data.title,
-          price: data.price,
-          description: data.description,
-          categoryId: data.categoryId,
-          images: {
-            create: data.imageUrls.map((url) => ({ imageUrl: url })),
-          },
+    return await this.prisma.products.create({
+      data: {
+        title: data.title,
+        price: data.price,
+        description: data.description,
+        categoryId: data.categoryId,
+        images: {
+          create: data.imageUrls.map((url) => ({ imageUrl: url })),
         },
-        include: { images: true, category: true },
-      });
-    } catch (error) {
-      console.log(error.message);
-
-      throw new BadRequestException(error);
-    }
+      },
+      include: { images: true, category: true },
+    });
   }
 
   async findAll() {
@@ -63,41 +47,29 @@ export class ProductsService {
     return product;
   }
 
-  async update(
-    id: string,
-    data: {
-      title?: string;
-      price?: number;
-      description?: string;
-      categoryId?: string;
-      imageUrls?: string[];
-    },
-  ) {
-    try {
-      const existing = await this.prisma.products.findUnique({ where: { id } });
-      if (!existing) throw new NotFoundException('Product not found');
+  async update(id: string, data: UpdateProductDto & { imageUrls: string[] }) {
+    const existing = await this.prisma.products.findUnique({ where: { id } });
 
-      const updateData: any = {
-        title: data.title,
-        price: data.price,
-        description: data.description,
-        categoryId: data.categoryId,
+    if (!existing) throw new NotFoundException('Product not found');
+
+    const updateData: any = {
+      title: data.title,
+      price: data.price,
+      description: data.description,
+      categoryId: data.categoryId,
+    };
+
+    if (data.imageUrls && data.imageUrls.length > 0) {
+      updateData.images = {
+        create: data.imageUrls.map((url) => ({ imageUrl: url })),
       };
-
-      if (data.imageUrls && data.imageUrls.length > 0) {
-        updateData.images = {
-          create: data.imageUrls.map((url) => ({ imageUrl: url })),
-        };
-      }
-
-      return await this.prisma.products.update({
-        where: { id },
-        data: updateData,
-        include: { images: true, category: true },
-      });
-    } catch (error) {
-      throw new BadRequestException(error);
     }
+
+    return await this.prisma.products.update({
+      where: { id },
+      data: updateData,
+      include: { images: true, category: true },
+    });
   }
 
   async remove(id: string) {
@@ -108,39 +80,25 @@ export class ProductsService {
   }
 
   async removeImage(id: string) {
-    try {
-      const image = await this.prisma.product_images.findUnique({
-        where: { id },
-      });
+    const image = await this.prisma.product_images.findUnique({
+      where: { id },
+    });
 
-      if (!image) throw new NotFoundException('Rasm topilmadi');
+    if (!image) throw new NotFoundException('Rasm topilmadi');
 
-      const fileName = path.basename(image.imageUrl);
-      const imagePath = path.join(
-        process.cwd(),
-        'uploads',
-        'products',
-        fileName,
-      );
+    const fileName = path.basename(image.imageUrl);
+    const imagePath = path.join(process.cwd(), 'uploads', 'products', fileName);
 
-      if (fs.existsSync(imagePath)) {
-        try {
-          fs.unlinkSync(imagePath);
-        } catch (err) {
-          throw new InternalServerErrorException(
-            "Faylni o'chirishda xatolik yuz berdi",
-          );
-        }
+    if (fs.existsSync(imagePath)) {
+      try {
+        fs.unlinkSync(imagePath);
+      } catch (err) {
+        throw new InternalServerErrorException("Faylni o'chirishda xatolik yuz berdi");
       }
-
-      await this.prisma.product_images.delete({ where: { id } });
-
-      return { message: "Rasm muvaffaqiyatli o'chirildi" };
-    } catch (error) {
-      throw new BadRequestException({
-        message: "Rasmni o'chirishda xatolik yuz berdi",
-        error: error.message,
-      });
     }
+
+    await this.prisma.product_images.delete({ where: { id } });
+
+    return { message: "Rasm muvaffaqiyatli o'chirildi" };
   }
 }

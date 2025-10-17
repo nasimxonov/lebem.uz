@@ -10,13 +10,15 @@ import {
   UseInterceptors,
   Req,
   UnauthorizedException,
+  UseGuards,
 } from '@nestjs/common';
 import { ProductsService } from './products.service';
-import { ApiTags, ApiBody, ApiParam, ApiConsumes } from '@nestjs/swagger';
+import { ApiTags, ApiBody, ApiParam, ApiConsumes, ApiBearerAuth, ApiExtraModels } from '@nestjs/swagger';
 import { FilesInterceptor } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
-import { extname } from 'path';
-import { v4 as uuid } from 'uuid';
+import { createMulterOptions } from 'src/common/utils/upload.utils';
+import { AuthGuard } from 'src/common/guard/auth.guard';
+import { CreateProductDto } from './dto/create-product.dto';
+import { UpdateProductDto } from './dto/update-product.dto';
 
 @ApiTags('Products')
 @Controller('products')
@@ -24,128 +26,50 @@ export class ProductsController {
   constructor(private readonly productsService: ProductsService) {}
 
   @Post()
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard)
   @ApiConsumes('multipart/form-data')
-  @UseInterceptors(
-    FilesInterceptor('images', 10, {
-      storage: diskStorage({
-        destination: './uploads/products',
-        filename: (req, file, callback) => {
-          const uniqueName = uuid() + extname(file.originalname);
-          callback(null, uniqueName);
-        },
-      }),
-      limits: { fileSize: 100 * 1024 * 1024 },
-    }),
-  )
-  @ApiBody({
-    schema: {
-      type: 'object',
-      properties: {
-        title: { type: 'string' },
-        price: { type: 'number' },
-        description: { type: 'string' },
-        categoryId: { type: 'string' },
-        images: {
-          type: 'array',
-          items: { type: 'string', format: 'binary' },
-        },
-      },
-    },
-  })
-  async create(
-    @UploadedFiles() files: Express.Multer.File[],
-    @Body() body: any,
-    @Req() req: any,
-  ) {
-    if (!req.user)
-      throw new UnauthorizedException('Foydalanuvchi tizimga kirmagan');
-
+  @UseInterceptors(FilesInterceptor('images', 10, createMulterOptions('./uploads/products', true)))
+  async create(@UploadedFiles() files: Express.Multer.File[], @Body() body: CreateProductDto, @Req() req: any) {
     const imageUrls = files.map((file) => `/uploads/products/${file.filename}`);
-    return this.productsService.create({
-      title: body.title,
-      price: Number(body.price),
-      description: body.description,
-      categoryId: body.categoryId,
-      imageUrls,
-    });
+    return await this.productsService.create({ ...body, imageUrls });
   }
 
   @Get()
-  findAll() {
-    return this.productsService.findAll();
+  async findAll() {
+    return await this.productsService.findAll();
   }
 
   @Get(':id')
   @ApiParam({ name: 'id', type: 'string' })
-  findOne(@Param('id') id: string) {
-    return this.productsService.findOne(id);
+  async findOne(@Param('id') id: string) {
+    return await this.productsService.findOne(id);
   }
 
   @Patch(':id')
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard)
   @ApiParam({ name: 'id', type: 'string' })
   @ApiConsumes('multipart/form-data')
-  @UseInterceptors(
-    FilesInterceptor('images', 10, {
-      storage: diskStorage({
-        destination: './uploads/products',
-        filename: (req, file, callback) => {
-          const uniqueName = uuid() + extname(file.originalname);
-          callback(null, uniqueName);
-        },
-      }),
-    }),
-  )
-  @ApiBody({
-    schema: {
-      type: 'object',
-      properties: {
-        title: { type: 'string' },
-        price: { type: 'number' },
-        description: { type: 'string' },
-        categoryId: { type: 'string' },
-        images: {
-          type: 'array',
-          items: { type: 'string', format: 'binary' },
-        },
-      },
-    },
-  })
-  async update(
-    @Param('id') id: string,
-    @UploadedFiles() files: Express.Multer.File[],
-    @Body() body: any,
-    @Req() req: any,
-  ) {
-    if (!req.user)
-      throw new UnauthorizedException('Foydalanuvchi tizimga kirmagan');
-
-    const imageUrls = files
-      ? files.map((file) => `/uploads/products/${file.filename}`)
-      : [];
-    return this.productsService.update(id, {
-      title: body.title,
-      price: Number(body.price),
-      description: body.description,
-      categoryId: body.categoryId,
-      imageUrls,
-    });
+  @UseInterceptors(FilesInterceptor('images', 10, createMulterOptions('./uploads/products')))
+  async update(@Param('id') id: string, @UploadedFiles() files: Express.Multer.File[], @Body() body: UpdateProductDto, @Req() req: any) {
+    const imageUrls = files ? files.map((file) => `/uploads/products/${file.filename}`) : [];
+    return this.productsService.update(id, { ...body, imageUrls });
   }
 
   @Delete(':id')
+  @ApiBearerAuth()
   @ApiParam({ name: 'id', type: 'string' })
-  remove(@Param('id') id: string, @Req() req: any) {
-    if (!req.user)
-      throw new UnauthorizedException('Foydalanuvchi tizimga kirmagan');
-
-    return this.productsService.remove(id);
+  @UseGuards(AuthGuard)
+  async remove(@Param('id') id: string, @Req() req: any) {
+    return await this.productsService.remove(id);
   }
 
   @Delete('image/:id')
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard)
   @ApiParam({ name: 'id', type: 'string' })
-  removeImage(@Param('id') id: string, @Req() req: any) {
-    if (!req.user)
-      throw new UnauthorizedException('Foydalanuvchi tizimga kirmagan');
-
-    return this.productsService.removeImage(id);
+  async removeImage(@Param('id') id: string, @Req() req: any) {
+    return await this.productsService.removeImage(id);
   }
 }
