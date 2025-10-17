@@ -4,7 +4,7 @@ import { AuthGuard } from 'src/common/guard/auth.guard';
 import { ApiBearerAuth, ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import { TelegramUserDto } from './dto/telegram-user.dto';
 
-@Controller()
+@Controller('bot')
 @ApiBearerAuth()
 @ApiTags('bot')
 export class BotController {

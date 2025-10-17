@@ -18,14 +18,26 @@ export class CategoryService {
 
   async findAll() {
     return await this.prisma.categories.findMany({
-      // include: { products: true },
+      include: {
+        _count: {
+          select: {
+            products: true,
+          },
+        },
+      },
     });
   }
 
   async findOne(id: string) {
     const category = await this.prisma.categories.findUnique({
       where: { id },
-      // include: { products: true },
+      include: {
+        _count: {
+          select: {
+            products: true,
+          },
+        },
+      },
     });
 
     return category;

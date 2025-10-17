@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { Transform } from 'class-transformer';
 import { IsNumber, IsOptional, IsString } from 'class-validator';
 
 export class UpdateProductDto {
@@ -8,6 +9,7 @@ export class UpdateProductDto {
   title: string;
 
   @IsOptional()
+  @Transform(({ value }) => parseInt(value, 10))
   @IsNumber()
   @ApiProperty({ required: false })
   price: number;
