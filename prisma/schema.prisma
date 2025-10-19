@@ -67,3 +67,26 @@ model BotUser {
   phoneNumber String?
   createdAt   DateTime @default(now())
 }
+
+model Message {
+  id         Int                @id @default(autoincrement())
+  text       String
+  images     String[]
+  recipients MessageRecipient[]
+  createdAt  DateTime           @default(now())
+}
+
+model MessageRecipient {
+  id        Int             @id @default(autoincrement())
+  message   Message         @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  messageId Int
+  userId    String
+  status    RecipientStatus @default(PENDING)
+  sentAt    DateTime?
+}
+
+enum RecipientStatus {
+  PENDING
+  SENT
+  FAILED
+}

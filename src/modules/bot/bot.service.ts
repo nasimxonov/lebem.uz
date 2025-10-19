@@ -4,12 +4,13 @@ import { TelegramUserRegisterDTO } from './dto/telegram-user.dto';
 import { SendMessageDto } from './dto/send-message.dto';
 import { InjectQueue } from '@nestjs/bull';
 import type { Queue } from 'bull';
+import { IMessageQueueData } from './bot.processor';
 
 @Injectable()
 export class BotService {
   constructor(
     private readonly prisma: PrismaService,
-    @InjectQueue('botQueue') private botQueue: Queue,
+    @InjectQueue('botQueue') private botQueue: Queue<IMessageQueueData>,
   ) {}
 
   async findUserById(userId: number): Promise<any> {
@@ -27,26 +28,28 @@ export class BotService {
   }
 
   async queueMessage(body: SendMessageDto, images: Express.Multer.File[] = []) {
-    for (let index = 0; index < body.telegramIds.length; index++) {
-      const id = body.telegramIds[index];
+    const telegramIds = JSON.parse(body.telegram_ids);
 
-      await this.botQueue.add('sendMessage', {
-        userId: id,
-        message: `${index} ${body.message}`,
-        images: images.map((i) => i.path),
-      });
-    }
-
-    return { status: 'queued', count: body.telegramIds.length };
-  }
-
-  async getAllUserIds(): Promise<string[]> {
-    const result = await this.prisma.botUser.findMany({
-      select: {
-        telegramId: true,
+    const message = await this.prisma.message.create({
+      data: {
+        text: body.message,
+        recipients: {
+          create: telegramIds.map((id: string) => ({ userId: id.toString() })),
+        },
       },
     });
 
-    return result.map((e) => e.telegramId);
+    for (let index = 0; index < telegramIds.length; index++) {
+      const id = telegramIds[index];
+
+      await this.botQueue.add('sendMessage', {
+        userId: id,
+        messageId: message.id,
+        message: body.message,
+        images: images.map((i) => `/uploads/message-images/${i.filename}`),
+      });
+    }
+
+    return { status: 'queued', count: telegramIds.length };
   }
 }
