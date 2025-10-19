@@ -19,6 +19,7 @@ import { createMulterOptions } from 'src/common/utils/upload.utils';
 import { AuthGuard } from 'src/common/guard/auth.guard';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
+import { ReorderDTO } from './dto/reorder.dto';
 
 @ApiTags('Products')
 @Controller('products')
@@ -38,6 +39,14 @@ export class ProductsController {
   @Get()
   async findAll() {
     return await this.productsService.findAll();
+  }
+
+  @Patch('reorder')
+  @UseGuards(AuthGuard)
+  @ApiBearerAuth()
+  @ApiBody({ type: ReorderDTO, isArray: true })
+  async reorder(@Body() data: ReorderDTO[]) {
+    return await this.productsService.reorder(data);
   }
 
   @Get(':id')

@@ -20,13 +20,14 @@ model Users {
 }
 
 model Products {
-  id          String           @id @default(uuid())
+  id          String          @id @default(uuid())
   title       String
   price       Float
   description String
   categoryId  String
-  category    Categories       @relation(fields: [categoryId], references: [id])
-  images      Product_images[]
+  category    Categories      @relation(fields: [categoryId], references: [id])
+  images      ProductImages[]
+  order       Int             @default(0)
 
   @@map("products")
 }
@@ -40,7 +41,7 @@ model Contact {
   @@map("contacts")
 }
 
-model Product_images {
+model ProductImages {
   id        String   @id @default(uuid())
   imageUrl  String
   productId String
@@ -54,6 +55,7 @@ model Categories {
   title    String
   image    String?
   products Products[]
+  order    Int        @default(0)
 
   @@map("categories")
 }

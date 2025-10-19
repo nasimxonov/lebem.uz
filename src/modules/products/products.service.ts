@@ -3,6 +3,7 @@ import { PrismaService } from 'src/core/database/prisma.service';
 import * as fs from 'fs';
 import * as path from 'path';
 import { UpdateProductDto } from './dto/update-product.dto';
+import { ReorderDTO } from './dto/reorder.dto';
 
 @Injectable()
 export class ProductsService {
@@ -14,9 +15,6 @@ export class ProductsService {
     });
 
     if (!category) throw new NotFoundException('Category not found');
-
-    console.log('salom');
-    console.log(data.imageUrls);
 
     return await this.prisma.products.create({
       data: {
@@ -35,6 +33,7 @@ export class ProductsService {
   async findAll() {
     return this.prisma.products.findMany({
       include: { category: true, images: true },
+      orderBy: { order: 'asc' },
     });
   }
 
@@ -80,7 +79,7 @@ export class ProductsService {
   }
 
   async removeImage(id: string) {
-    const image = await this.prisma.product_images.findUnique({
+    const image = await this.prisma.productImages.findUnique({
       where: { id },
     });
 
@@ -97,8 +96,21 @@ export class ProductsService {
       }
     }
 
-    await this.prisma.product_images.delete({ where: { id } });
+    await this.prisma.productImages.delete({ where: { id } });
 
-    return { message: "Rasm muvaffaqiyatli o'chirildi" };
+    return { status: 200, message: "Rasm muvaffaqiyatli o'chirildi" };
+  }
+
+  async reorder(dto: ReorderDTO[]): Promise<any> {
+    const updates = dto.map((item) =>
+      this.prisma.products.update({
+        where: { id: item.id },
+        data: { order: item.order },
+      }),
+    );
+
+    await this.prisma.$transaction(updates);
+
+    return { status: 200, message: 'Products reordered successfully' };
   }
 }

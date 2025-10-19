@@ -6,6 +6,7 @@ import { AuthGuard } from 'src/common/guard/auth.guard';
 import { createMulterOptions } from 'src/common/utils/upload.utils';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDTO } from './dto/update-category.dto';
+import { ReorderDTO } from './dto/reorder.dto';
 
 @ApiTags('Categories')
 @Controller('categories')
@@ -31,6 +32,14 @@ export class CategoryController {
     return await this.categoryService.findAll();
   }
 
+  @Patch('reorder')
+  @UseGuards(AuthGuard)
+  @ApiBearerAuth()
+  @ApiBody({ type: ReorderDTO, isArray: true })
+  async reorder(@Body() data: ReorderDTO[]) {
+    return await this.categoryService.reorder(data);
+  }
+
   @Get(':id')
   @ApiParam({ name: 'id', type: 'string' })
   async findOne(@Param('id') id: string) {
@@ -45,7 +54,7 @@ export class CategoryController {
   @UseInterceptors(FileInterceptor('image', createMulterOptions('./uploads/categories', true)))
   async update(@Param('id') id: string, @Body() body: UpdateCategoryDTO, @UploadedFile() image: Express.Multer.File, @Req() req: any) {
     const imageUrl = image ? `/uploads/categories/${image.filename}` : undefined;
-    
+
     return await this.categoryService.update(id, {
       title: body.title,
       image: imageUrl,

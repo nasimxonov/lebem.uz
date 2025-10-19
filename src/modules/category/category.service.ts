@@ -2,6 +2,7 @@ import { Injectable, BadRequestException, NotFoundException } from '@nestjs/comm
 import { PrismaService } from 'src/core/database/prisma.service';
 import * as fs from 'fs';
 import * as path from 'path';
+import { ReorderDTO } from './dto/reorder.dto';
 
 @Injectable()
 export class CategoryService {
@@ -68,5 +69,18 @@ export class CategoryService {
     if (!existing) throw new NotFoundException({ message: 'Kategoriya topilmadi' });
 
     return await this.prisma.categories.delete({ where: { id } });
+  }
+
+  async reorder(dto: ReorderDTO[]): Promise<any> {
+    const updates = dto.map((item) =>
+      this.prisma.categories.update({
+        where: { id: item.id },
+        data: { order: item.order },
+      }),
+    );
+
+    await this.prisma.$transaction(updates);
+
+    return { status: 200, message: 'Categories reordered successfully' };
   }
 }
