@@ -1,14 +1,21 @@
 import { Global, Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { DatabaseModule } from './database/database.module';
-import { TelegrafModule } from 'nestjs-telegraf';
+import { BullModule } from '@nestjs/bull';
 
 @Global()
 @Module({
   imports: [
     DatabaseModule,
     ConfigModule.forRoot({ isGlobal: true }),
+    BullModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: async (config: ConfigService) => {
+        const url = config.getOrThrow<string>('REDIS_URL');
+        return { url };
+      },
+    }),
     JwtModule.register({
       global: true,
       secret: process.env.JWT_SECRET,

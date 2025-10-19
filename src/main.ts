@@ -6,11 +6,14 @@ import { NestExpressApplication } from '@nestjs/platform-express';
 import { existsSync, mkdirSync } from 'fs';
 import { ValidationPipe } from '@nestjs/common';
 import { PrismaValidationExceptionFilter } from './common/filters/prisma-exception.filter';
+import { setupBullBoard } from './setup-bull-board';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     cors: true,
   });
+
+  await setupBullBoard(app);
 
   const PORT = process.env.PORT ?? 3000;
 
