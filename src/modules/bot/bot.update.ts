@@ -14,7 +14,14 @@ export class BotUpdate {
     if (existingUser) {
       await ctx.reply(`🎉 Hush kelibsiz, ${existingUser.fullName}!`, {
         reply_markup: {
-          remove_keyboard: true,
+          inline_keyboard: [
+            [
+              {
+                text: "📂 Kataloglarni ko'rish",
+                web_app: { url: 'https://lebem.uz' },
+              },
+            ],
+          ],
         },
       });
     } else {

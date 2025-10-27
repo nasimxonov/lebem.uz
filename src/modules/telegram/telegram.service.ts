@@ -8,11 +8,10 @@ export class TelegramService {
 
   async sendMessage(chatId: string, text: string, images: string[] = []) {
     if (images.length > 1) {
-      // Agar birdan ortiq rasm bo‘lsa — media group yuboramiz
       const media = images.map((img, index) => ({
         type: 'photo',
         media: `https://lebemuz.duckdns.org${img}`,
-        ...(index === 0 ? { caption: text } : {}), // caption faqat 1-rasmda bo‘ladi
+        ...(index === 0 ? { caption: text } : {}),
       }));
 
       await axios.post(`${this.api}/sendMediaGroup`, {
@@ -20,14 +19,14 @@ export class TelegramService {
         media,
       });
     } else if (images.length === 1) {
-      // Faqat bitta rasm
       await axios.post(`${this.api}/sendPhoto`, {
         chat_id: chatId,
         photo: `https://lebemuz.duckdns.org${images[0]}`,
         caption: text,
       });
+
+      await new Promise((r) => setTimeout(r, 500));
     } else {
-      // Oddiy text
       await axios.post(`${this.api}/sendMessage`, {
         chat_id: chatId,
         text,

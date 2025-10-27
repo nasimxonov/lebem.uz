@@ -82,7 +82,18 @@ export class RegistrationScene {
       phoneNumber: userData.phone!,
     });
 
-    await ctx.reply(`🎉 Tabriklaymiz! Ro'yxatdan muvaffaqiyatli o'tdingiz!`);
+    await ctx.reply(`🎉 Tabriklaymiz! Ro'yxatdan muvaffaqiyatli o'tdingiz!\n\nEndi kataloglarimizni ko'rishingiz mumkin:`, {
+      reply_markup: {
+        inline_keyboard: [
+          [
+            {
+              text: "📂 Kataloglarni ko'rish",
+              web_app: { url: 'https://lebem.uz' },
+            },
+          ],
+        ],
+      },
+    });
 
     await ctx.scene.leave();
   }
