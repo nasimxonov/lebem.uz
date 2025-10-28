@@ -88,7 +88,7 @@ export class RegistrationScene {
           [
             {
               text: "📂 Kataloglarni ko'rish",
-              web_app: { url: 'https://lebem.uz/#categories' },
+              web_app: { url: 'https://t.me/LebemUzBot/categories' },
             },
           ],
         ],
