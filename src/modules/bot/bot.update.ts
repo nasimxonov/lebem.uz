@@ -18,7 +18,7 @@ export class BotUpdate {
             [
               {
                 text: "📂 Kataloglarni ko'rish",
-                web_app: { url: 'https://t.me/LebemUzBot/categories' },
+                web_app: { url: 'https://lebem.uz/' },
               },
             ],
           ],
